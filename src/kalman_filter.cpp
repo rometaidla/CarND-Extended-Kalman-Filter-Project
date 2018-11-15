@@ -32,22 +32,44 @@ void KalmanFilter::Predict() {
 void KalmanFilter::Update(const VectorXd &z) {
   VectorXd z_pred = H_ * x_;
   VectorXd y = z - z_pred;
+  UpdateState(y);
+}
+
+void KalmanFilter::UpdateEKF(const VectorXd &z) {
+  double px = x_(0);
+  double py = x_(1);
+  double vx = x_(2);
+  double vy = x_(3);
+
+  double rho = sqrt(px*px + py*py);
+  double theta = atan2(py, px);
+  double rho_dot = (px*vx + py*vy) / rho;
+  
+  VectorXd h = VectorXd(3);
+  h << rho, theta, rho_dot;
+  VectorXd y = z - h;
+  
+  // Normalize theta  
+  while ( abs(y(1)) > M_PI ) {
+    if ( y(1) > M_PI ) {
+      y(1) -= M_PI;
+    } else {
+      y(1) += M_PI;
+    }
+  }
+
+  UpdateState(y);
+}
+
+void KalmanFilter::UpdateState(const VectorXd &y) {
   MatrixXd Ht = H_.transpose();
   MatrixXd S = H_ * P_ * Ht + R_;
   MatrixXd Si = S.inverse();
   MatrixXd PHt = P_ * Ht;
   MatrixXd K = PHt * Si;
 
-  //new estimate
   x_ = x_ + (K * y);
   long x_size = x_.size();
   MatrixXd I = MatrixXd::Identity(x_size, x_size);
   P_ = (I - K * H_) * P_;
-}
-
-void KalmanFilter::UpdateEKF(const VectorXd &z) {
-  /**
-  TODO:
-    * update the state by using Extended Kalman Filter equations
-  */
 }

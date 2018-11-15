@@ -64,6 +64,11 @@ public:
    */
   void UpdateEKF(const Eigen::VectorXd &z);
 
+  /**
+   * Method for updating state after y is calculated, used for both radar and laser cases.
+   */
+  void UpdateState(const Eigen::VectorXd &y);
+
 };
 
 #endif /* KALMAN_FILTER_H_ */
